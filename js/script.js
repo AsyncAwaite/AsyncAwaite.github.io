@@ -3,25 +3,31 @@ window.addEventListener('DOMContentLoaded', function() {
     const menu = document.querySelector('.header__menu')
     const header = document.querySelector('.header')
     const promo = document.querySelector('.promo');
-    const headerHeight = header.offsetHeight;
-    const promoHeight = promo.offsetTop;
+    const body  = document.body;
+    const promoHeight = promo.scrollHeight;
+    let menuStatus = false;
     window.addEventListener('scroll', headerFixed);
     function headerFixed() {
-        if (window.pageYOffset >= promoHeight)
+        
+        console.dir(promo)
+        if (window.pageYOffset >= promoHeight  && menuStatus === false)
         {
-            header.classList.add('header_fixed');
-            promo.style.marginTop = `${headerHeight}px`;
-        } else {
-            header.classList.remove('header_fixed');
-            promo.style.marginTop = null;
-        }
-        }
+            header.classList.add('header_fixed')
+            menuStatus = true;
    
-
+        } else if (window.pageYOffset < 200 && menuStatus === true){
+            menuStatus = false;
+            console.log('vbhvbhk');
+            header.classList.remove('header_fixed')
+        }
+    };
+  
 
 
     burger.addEventListener('click', (e) => {
         burger.classList.toggle('burger-opened');
         header.classList.toggle('active');
+        body.classList.toggle('active');
+      
     });
 });
