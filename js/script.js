@@ -16668,7 +16668,7 @@ window.addEventListener("DOMContentLoaded", function () {
       menu.appendChild(fragment);
       var promoText = document.createElement("div");
       promoText.classList.add("promo__text");
-      promoText.innerHTML = "Компания Double Clean предлагает профессиональные услуги химчистки диванов и&nbsp;другой мягкой мебели с&nbsp;выездом к&nbsp;заказчику на&nbsp;дом или в&nbsp;офис.";
+      promoText.innerHTML = "Компания CHISTO Panda предлагает профессиональные услуги химчистки диванов и&nbsp;другой мягкой мебели с&nbsp;выездом к&nbsp;заказчику на&nbsp;дом или в&nbsp;офис.";
       promo.appendChild(promoText);
     }
   }
