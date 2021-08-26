@@ -17017,7 +17017,7 @@ var reviews = function reviews() {
       prevEl: ".swiper-button-prev"
     },
     scrollbar: {
-      el: '.swiper-scrollbar',
+      el: ".swiper-scrollbar",
       draggable: true
     }
   });
