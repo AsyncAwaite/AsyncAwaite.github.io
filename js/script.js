@@ -16737,7 +16737,8 @@ window.addEventListener("DOMContentLoaded", function () {
     body.classList.toggle('active');
   });
   aos__WEBPACK_IMPORTED_MODULE_4___default.a.init({
-    duration: 1200
+    duration: 1200,
+    disable: true
   });
 });
 
