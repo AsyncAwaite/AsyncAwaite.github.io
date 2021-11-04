@@ -1463,10 +1463,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-window.onscroll = function () {
-  myFunction();
-};
-
 function myFunction() {
   var winScroll = document.body.scrollTop || document.documentElement.scrollTop;
   var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
@@ -1474,14 +1470,21 @@ function myFunction() {
   document.getElementById("progress-bar").style.width = scrolled + "%";
 }
 
-window.addEventListener('load', function () {
-  document.body.classList.add('loaded_hiding');
+window.addEventListener("load", function () {
+  document.body.classList.add("loaded_hiding");
   window.setTimeout(function () {
-    document.body.classList.add('loaded');
-    document.body.classList.remove('loaded_hiding');
-  }, 3000);
+    document.body.classList.add("loaded");
+    document.body.classList.remove("loaded_hiding");
+  }, 3000); // let iframeName = document.getElementById("leeloo-form-iframe-subhwp-0");
+  // const leelooWrap = document.querySelector(".leeloo-hash-subhwp").childNodes;
+  // console.log(leelooWrap);
+  // console.dir(iframeName);
 });
 window.addEventListener("DOMContentLoaded", function () {
+  window.onscroll = function () {
+    myFunction();
+  };
+
   var page = document.querySelector(".page");
   var header = page.querySelector(".header");
   var hero = document.querySelector(".hero");
@@ -1499,18 +1502,24 @@ window.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  var btns = document.querySelectorAll('.btn');
+  var btns = document.querySelectorAll(".btn");
   btns.forEach(function (btn) {
-    if (btn.getAttribute('data-modal') == '') btn.addEventListener('click', function () {
-      Object(_modules_popups__WEBPACK_IMPORTED_MODULE_1__["openModal"])('.popup');
+    if (btn.getAttribute("data-modal") == "") btn.addEventListener("click", function () {
+      Object(_modules_popups__WEBPACK_IMPORTED_MODULE_1__["openModal"])(".popup");
     });
   });
-  var popup = document.querySelector('.popup');
-  popup.addEventListener('click', function (e) {
+  var popup = document.querySelector(".popup");
+  popup.addEventListener("click", function (e) {
     if (e.target === popup || e.target.getAttribute("data-close") == "") {
       Object(_modules_popups__WEBPACK_IMPORTED_MODULE_1__["closeModal"])(".popup");
     }
-  });
+  }); // let iframeName = document.getElementById("leeloo-form-iframe-subhwp-0");
+  // console.dir(document.querySelector('.leeloo-lgt-form-wrapper'))
+  // console.dir(iframeName);
+  // window.onload = () => {
+  // let iframeContent = iframeName.contentDocument;
+  // iframeContent.body.innerHTML = iframeContent.body.innerHTML + '<style>.iframe-css{color: #d92909}</style>';
+  // };
 });
 
 /***/ }),
