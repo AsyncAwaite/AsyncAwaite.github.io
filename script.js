@@ -22571,6 +22571,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Forms__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Forms */ "./src/js/modules/Forms.js");
 
 
+var headerNav = _elements__WEBPACK_IMPORTED_MODULE_0__["header"].querySelector(".header__nav");
+
 function modalsEvents(target) {
   var modalForm = document.createElement("div");
   var modalImg = document.createElement("div");
@@ -22579,9 +22581,15 @@ function modalsEvents(target) {
   modalImg.style.backgroundImage = "url('assets/img/form-help.jpg')";
 
   if (target.hasAttribute("data-help")) {
+    if (document.querySelector(".burger") && matchMedia("(max-width: 768px)").matches) {
+      document.querySelector(".burger").classList.toggle("active");
+      headerNav.classList.toggle("active");
+      document.body.classList.toggle("active");
+    }
+
     modalForm.innerHTML = "\n<div class=\"modal__title\">\n<h2 class=\"form__title fz-32\">\n\u042F\u043A\u0449\u043E \u0432\u0438 \u043C\u0430\u043C\u0430 \u0437 \u0434\u0456\u0442\u044C\u043C\u0438 \u0430\u0431\u043E \u043B\u0456\u0442\u043D\u044F \u043B\u044E\u0434\u0438\u043D\u0430 \u0456 \u043F\u043E\u0442\u0440\u0435\u0431\u0443\u0454\u0442\u0435 \u0434\u043E\u043F\u043E\u043C\u043E\u0433\u0438 \n</h2>\n<h3 class=\"form__subtitle fz-18\">\n\u0417\u0430\u043F\u043E\u0432\u043D\u0456\u0442\u044C \u0431\u0443\u0434\u044C \u043B\u0430\u0441\u043A\u0430 \u0444\u043E\u0440\u043C\u0443 \u043D\u0438\u0436\u0447\u0435 \u0456 \u043C\u0438 \u0437 \u0412\u0430\u043C\u0438 \u0437\u0432\u2019\u044F\u0436\u0435\u043C\u043E\u0441\u044F \u044F\u043A\u043D\u0430\u0439\u0448\u0432\u0438\u0434\u0448\u0435\n</h3>\n</div>\n\n<form class=\"form form__help\">\n  <label class=\"form__item form__item_main\">\n    <span class=\"fz-14 f-700\">\n      \u0412\u0430\u0448\u0435 \u0456\u043C\u2019\u044F\n    </span>\n    <input class=\"f-700\" type=\"text\" name=\"name\" >\n    <div class=\"form__message\"></div>\n  </label>\n  <label class=\"form__item form__item_main\">\n    <span class=\"fz-14 f-700\">\n      \u041D\u043E\u043C\u0435\u0440 \u0442\u0435\u043B\u0435\u0444\u043E\u043D\u0443\n    </span>\n    <input type=\"text\" name=\"tel\" placeholder=\"\u041D\u043E\u043C\u0435\u0440 \u0442\u0435\u043B\u0435\u0444\u043E\u043D\u0443\">\n    <div class=\"form__message\"></div>\n  </label>\n\n  <button type=\"submit\" class=\"btn\">\n    \u0412\u0456\u0434\u043F\u0440\u0430\u0432\u0438\u0442\u0438\n  </button>\n\n  </div>\n</form> \n    \n      ";
     _elements__WEBPACK_IMPORTED_MODULE_0__["modal"].querySelector(".modal__body").appendChild(modalForm);
-    new _Forms__WEBPACK_IMPORTED_MODULE_1__["default"]('.form__help').init();
+    new _Forms__WEBPACK_IMPORTED_MODULE_1__["default"](".form__help").init();
   }
 
   if (target.hasAttribute("data-donate")) {
@@ -22591,7 +22599,7 @@ function modalsEvents(target) {
   }
 
   if (target.hasAttribute("data-more")) {
-    modalForm.innerHTML = "\n    <div class=\"modal__title\">\n    <h2 class=\" fz-32 f-700\">\n    \u041C\u0456\u0436\u043D\u0430\u0440\u043E\u0434\u043D\u0438\u0439 \u043B\u0456\u0446\u0435\u0439 \u0413\u043B\u043E\u0431\u0443\u0441\n    </h2>\n    <h3 class=\"fz-18 f-400\">\n    \u041E\u0437\u043D\u0430\u0439\u043E\u043C\u0442\u0435\u0441\u044F \u0437 \u0456\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0456\u0454\u044E \u043D\u0430 \u0437\u0440\u0443\u0447\u043D\u0456\u0439 \u0432\u0430\u043C \u043C\u043E\u0432\u0456\n    </h3>\n    </div>\n    <div class=\"modal__content\">\n   <div class=\"docs\">\n   <a href=\"#\" class=\"docs__item pos-r\"><svg class=\"icon\">\n  <use xlink:href=\"#doc\"></use>\n</svg><span>UA</span></a>\n   <a href=\"https://drive.google.com/file/d/1B207fTY6NdboHgmx0z6NH4VekhWXY6Pc/view?usp=sharing\" class=\"docs__item pos-r\"><svg class=\"icon\">\n  <use xlink:href=\"#doc\"></use>\n</svg><span>EN</span></a>\n   <a href=\"https://drive.google.com/file/d/1ZxtmmsXDIP01qBcWuE5kcOy-VMIXNBqK/view?usp=sharing\" class=\"docs__item pos-r\"><svg class=\"icon\">\n  <use xlink:href=\"#doc\"></use>\n</svg><span>DE</span></a>\n   <a href=\"https://drive.google.com/file/d/1FsLaYz4pwfZ1jMY5KNxlBBfcBfb92HZb/view?usp=sharing\" class=\"docs__item pos-r\"><svg class=\"icon\">\n  <use xlink:href=\"#doc\"></use>\n</svg><span>SPA</span></a>\n   </div>\n    </div>\n    \n\n    ";
+    modalForm.innerHTML = "\n    <div class=\"modal__title\">\n    <h2 class=\" fz-32 f-700\">\n    \u041C\u0456\u0436\u043D\u0430\u0440\u043E\u0434\u043D\u0438\u0439 \u043B\u0456\u0446\u0435\u0439 \u0413\u043B\u043E\u0431\u0443\u0441\n    </h2>\n    <h3 class=\"fz-18 f-400\">\n    \u041E\u0437\u043D\u0430\u0439\u043E\u043C\u0442\u0435\u0441\u044F \u0437 \u0456\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0456\u0454\u044E \u043D\u0430 \u0437\u0440\u0443\u0447\u043D\u0456\u0439 \u0432\u0430\u043C \u043C\u043E\u0432\u0456\n    </h3>\n    </div>\n    <div class=\"modal__content\">\n   <div class=\"docs\">\n   <a href=\"https://drive.google.com/file/d/1kt7szAcniAqwSE75xCahLBmJvxH1QPaj/view?usp=sharing\" class=\"docs__item pos-r\"><svg class=\"icon\">\n  <use xlink:href=\"#doc\"></use>\n</svg><span>UA</span></a>\n   <a href=\"https://drive.google.com/file/d/1B207fTY6NdboHgmx0z6NH4VekhWXY6Pc/view?usp=sharing\" class=\"docs__item pos-r\"><svg class=\"icon\">\n  <use xlink:href=\"#doc\"></use>\n</svg><span>EN</span></a>\n   <a href=\"https://drive.google.com/file/d/1ZxtmmsXDIP01qBcWuE5kcOy-VMIXNBqK/view?usp=sharing\" class=\"docs__item pos-r\"><svg class=\"icon\">\n  <use xlink:href=\"#doc\"></use>\n</svg><span>DE</span></a>\n   <a href=\"https://drive.google.com/file/d/1FsLaYz4pwfZ1jMY5KNxlBBfcBfb92HZb/view?usp=sharing\" class=\"docs__item pos-r\"><svg class=\"icon\">\n  <use xlink:href=\"#doc\"></use>\n</svg><span>SPA</span></a>\n   </div>\n    </div>\n    \n\n    ";
     _elements__WEBPACK_IMPORTED_MODULE_0__["modal"].querySelector(".modal__body").classList.add("globus");
     _elements__WEBPACK_IMPORTED_MODULE_0__["modal"].querySelector(".modal__body").appendChild(modalForm);
     modalImg.style.backgroundImage = "url('assets/img/help/7.jpg')";
