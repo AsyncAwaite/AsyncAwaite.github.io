@@ -1,0 +1,28 @@
+.partners{
+
+  position: relative;
+
+  h2{
+    position: relative;
+    z-index: 1;
+  }
+  .row{
+
+    row-gap: 3rem;
+  }
+  &__item{
+
+  text-align: center;
+  position: relative;z-index: 1;
+  border-radius: 10px;
+
+  .image{
+    min-height: 10rem;
+  }
+  img{
+    object-fit: contain;
+  }
+
+
+  }
+}

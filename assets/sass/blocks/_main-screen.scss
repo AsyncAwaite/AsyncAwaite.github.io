@@ -1,0 +1,14 @@
+.main-screen {
+margin-top: size(100, 40);
+&__title{
+  font-size: size(60, 40);
+  line-height: size(70, 50);
+  margin-bottom: 3rem;
+}
+&__subtitle{
+  font-size: size(35, 25);
+  line-height: size(40, 30);
+  width: 70%;
+  margin: 0 auto 3rem;
+}
+}
