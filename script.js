@@ -24041,40 +24041,42 @@ var services = [{
     ru: "Химчистка салона",
     ua: "Хімчистка салону",
     descr: "\u0425\u0456\u043C\u0447\u0438\u0441\u0442\u043A\u0430 - \u0434\u0431\u0430\u0439\u043B\u0438\u0432\u0435 \u043E\u0447\u0438\u0449\u0435\u043D\u043D\u044F \u0448\u043A\u0456\u0440\u0438, \u0430\u043B\u044C\u043A\u0430\u043D\u0442\u0430\u0440\u0438 \u0430\u0431\u043E \u0442\u0435\u043A\u0441\u0442\u0438\u043B\u044C\u043D\u043E\u0433\u043E \u043F\u043E\u043A\u0440\u0442\u0442\u044F \u0441\u0430\u043B\u043E\u043D\u0443 \u0432\u0430\u0448\u043E\u0433\u043E \u0443\u043B\u044E\u0431\u043B\u0435\u043D\u043E\u0433\u043E \u0430\u0432\u0442\u043E. \u041E\u0447\u0438\u0449\u0435\u043D\u043D\u044F \u0432\u0441\u0456\u0445 \u0434\u0440\u0456\u0431\u043D\u0438\u0445 \u0435\u043B\u0435\u043C\u0435\u043D\u0442\u0456\u0432 \u0441\u0430\u043B\u043E\u043D\u0443, \u0430 \u0442\u0430\u043A\u043E\u0436 \u043A\u043E\u0432\u0440\u043E\u043B\u0456\u043D\u0430. \u041D\u0430\u043D\u0435\u0441\u0435\u043D\u043D\u044F \u043A\u043E\u043D\u0441\u0435\u0440\u0432\u0430\u043D\u0442\u0456\u0432 \u0434\u043B\u044F \u0448\u043A\u0456\u0440\u0438 \u0442\u0430 \u043F\u043B\u0430\u0441\u0442\u0438\u043A\u0443. \u041E\u0437\u043E\u043D\u0430\u0446\u0456\u044F \u0441\u0430\u043B\u043E\u043D\u0443.",
-    price: [5000, 6500, 7500, 9000]
+    price: ["від 3500 грн."]
   }
 }, {
   carWash: {
     ru: "Детейлинг мойка",
     ua: "Детейлінг мийка",
     descr: "3-х фазне миття кузова, видалення з ЛКП авто органічних і не органічних частин, очищення дисків і насадок, миття днища, вологе прибирання салону, пилисос килимків. Очищення скла. Нанесення консерванту на зовнішній пластик та резину",
-    price: [3200, 3700, 4500, 5000]
+    price: ["від 2500 грн."]
   }
 }, {
   antiRain: {
     ru: "Антидождь",
     ua: "Антидощ",
-    descr: 'Щоб ваше скло довше залишалося як нове, пропонуємо нанести антидощ, який дозволить довше зберігати ваше скло в ідеальному стані, а також надасть чудовий гідрофобний ефект. Процедура проводиться з попередньою глибокою очисткою скла',
-    price: [850, 850, 850, 850]
+    descr: "Щоб ваше скло довше залишалося як нове, пропонуємо нанести антидощ, який дозволить довше зберігати ваше скло в ідеальному стані, а також надасть чудовий гідрофобний ефект. Процедура проводиться з попередньою глибокою очисткою скла",
+    price: ["850 грн."]
   }
 }, {
   polishing: {
     ru: "Полировка",
-    ua: "Полірування",
-    descr: "Видалення з ЛКП авто органічних і не органічних частин. Та нанесення твердого воску Meguiarus, який забезпечить гідрофобний ефект, та завдяки вмісту карнауба додасть неймовірний блиск",
-    price: ['x', 'x', 'x', 'x']
+    ua: "Очищення та блиск",
+    descr: "Видалення з ЛКП авто органічних і не органічних частин. Підготовка кузова до полірування. <ul><li class='fz-18'>від 1 500 грн. </li></ul>  Нанесення твердого воску <b>Meguiarus</b>, який забезпечить гідрофобний ефект, та завдяки вмісту карнауба додасть неймовірний блиск <ul><li class='fz-18'>від 1 100 грн. </li></ul>",
+    price: null
   }
 }, {
   cleanRim: {
     ru: "Химчистка дисков",
     ua: "Хімчистка дисків",
     descr: "Диски це 50% зовнішнього вигляду вашого авто. Проводимо очищення вітуму та металевих вкраплень. Після процедури, Ваші дискі сяють, як нові. Ціна вказана за 1шт.",
-    price: [170, 170, 220, 220]
+    price: ["1 кат. - 170 грн.", "2 кат. - 170 грн.", "3 кат. - 220 грн.", "4 кат. - 220 грн."]
   }
 }, {
-  tires: {
-    ru: "Чернение резины и арок",
-    ua: "Чорніння гуми та арок"
+  wash: {
+    ru: "Мойка авто",
+    ua: "Мийка авто",
+    descr: "<span>2-х фазний комплекс</span>Первинне безконтактне миття авто з використанням безфосфатних шампунів Koch Chemie. Ручне миття з використанням пористих мочалок, які «збирають» абразив, не даючи йому доторкнутися до елементів кузова.  вологе прибирання салону, пилисос килимків. Очищення скла. Нанесення консерванту на зовнішній пластик та резину<ul><li class='fz-18'>1 кат. - 600 грн.</li><li class='fz-18'>2 кат. - 650 грн.</li><li class='fz-18'>3 кат. - 700 грн.</li><li class='fz-18'>4 кат. - 750 грн.</li></ul><span>3-х фазний комплекс</span>2-х фазний комплекс + нанесення рідкого воску – Protector Wax, який захистить авто від забруднень та подарує дзеркальний блиск ЛКП на кілька тижнів.<ul><li class='fz-18'>1 кат. - 700 грн.</li><li class='fz-18'>2 кат. - 800 грн.</li><li class='fz-18'>3 кат. - 1000 грн.</li><li class='fz-18'>4 кат. - 120 грн.</li></ul>",
+    price: null
   }
 }, {
   inrerior: {
@@ -24113,6 +24115,7 @@ function modalsEvents(target) {
 
   if (target.hasAttribute("data-services")) {
     var modalText = document.createElement("div");
+    modalText.classList = "modal__services";
 
     var _iterator = _createForOfIteratorHelper(services),
         _step;
@@ -24127,8 +24130,11 @@ function modalsEvents(target) {
               ru = _service$target$datas.ru,
               descr = _service$target$datas.descr,
               price = _service$target$datas.price;
-          modalText.innerHTML = "\n        <h2 class=\"fz-24\">".concat(ua, "</h2>\n        <div>").concat(descr, "</div>\n    \n        ");
-          modalText.appendChild(renderPrice(price));
+          modalText.innerHTML = "\n        <h2 class=\"fz-24\">".concat(ua, "</h2>\n        <div class=\"fz-16\">").concat(descr, "</div>\n        ");
+
+          if (renderPrice(price)) {
+            modalText.appendChild(renderPrice(price));
+          }
         }
       }
     } catch (err) {
@@ -24137,19 +24143,23 @@ function modalsEvents(target) {
       _iterator.f();
     }
 
+    _elements__WEBPACK_IMPORTED_MODULE_14__["modalBody"].classList.add("services");
     _elements__WEBPACK_IMPORTED_MODULE_14__["modalBody"].appendChild(modalText);
   }
 
   function renderPrice(arr) {
-    var ul = document.createElement('ul');
-    var fragment = document.createDocumentFragment();
-    arr.forEach(function (item) {
-      var li = document.createElement('li');
-      li.innerText = item;
-      fragment.appendChild(li);
-    });
-    ul.appendChild(fragment);
-    return ul;
+    if (Array.isArray(arr)) {
+      var ul = document.createElement("ul");
+      var fragment = document.createDocumentFragment();
+      arr.forEach(function (item) {
+        var li = document.createElement("li");
+        li.classList = "fz-18";
+        li.innerText = item;
+        fragment.appendChild(li);
+      });
+      ul.appendChild(fragment);
+      return ul;
+    }
   }
 
   function formBody() {
