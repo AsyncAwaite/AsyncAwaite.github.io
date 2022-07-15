@@ -28,7 +28,13 @@ background: $yellow;
   }
   &:hover {
     text-decoration: none;
-    background: lighten($color: $yellow, $amount: 15%)
+    background: lighten($color: $yellow, $amount: 15%);
+
+  }
+  &a{
+    &:hover{
+      color: #fff;
+    }
   }
 
 

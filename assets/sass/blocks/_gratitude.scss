@@ -1,0 +1,38 @@
+.gratitude{
+  h2{
+    margin-bottom: 5rem;
+  }
+  &-wrapper{
+    overflow: hidden;
+  }
+  &__item{
+    padding: 2rem;
+    background: #EEEEEE;
+    .doc{
+      width: 7.5rem;
+      height: 7.5rem;
+      span{
+        width: 5rem;
+        height: 5rem;
+        border-radius: 50%;
+        background: #A2D7F1;
+        color: #fff;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        left: -1rem;
+        bottom: -1rem;
+
+      }
+      h4{
+        margin-bottom: 0.5rem;
+      }
+    }
+  }
+  .swiper__nav{
+    margin-left: 0;
+  }
+  .counter{
+    margin: 0 1rem;
+  }
+}

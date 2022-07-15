@@ -20,10 +20,25 @@ position: relative;
 }
 &__team{
 padding-top: 0!important;
+.counter{
+  margin: 0 1rem;
+}
+.swiper__nav{
+  margin-left: 0;
+}
 }
 &__footer{
   padding-bottom: 4rem;
   background: #415262;
+}
+&__gratitude{
+  .title-big{
+    left: 0;
+    top: size(-80, -30);
+    @media (min-width: 1500px) {
+      top: -8rem;
+    }
+  }
 }
 
 }
