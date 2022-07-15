@@ -219,6 +219,31 @@ position: absolute;
 right: 0;top: size(-120, -42);
 color: rgba(255, 199, 0, 0.1);
   }
+  &_left{
+    padding: 2rem 0;
+    position: static;
+    &::after{
+      height: 78px;
+      width: 100%;
+      left: -27%;
+      @media (max-width: 992px) {
+
+        left: -50%;
+      }
+      @media (max-width: 600px) {
+
+        left: -30%;
+      }
+    }
+
+  }
+  &_center{
+    &::after{
+      left: 0;
+    }
+
+
+  }
 }
 .pagination{
   position: absolute;
@@ -455,7 +480,7 @@ border-bottom:  1px solid #464646;
 @import "blocks/menu";
 @import "blocks/main-screen";
 @import "blocks/about";
-// @import "blocks/help";
+@import "blocks/team";
 // @import "blocks/report";
 // @import "blocks/form-section";
 // @import "blocks/form";

@@ -124,6 +124,20 @@
     }
   }
 .about{
+  &-page{
+    &__person{
+      .title-big{
+        top: 0!important;
+      }
+      .descr{
+        padding-left: 0;
+      }
+    }
+    &__descr{
+      padding-right: 0;
+    }
+    
+  }
   .swiper{
     height: auto;
     &__img{

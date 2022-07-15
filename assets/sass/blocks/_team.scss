@@ -1,0 +1,28 @@
+.team{
+  &-wrapper{
+    overflow: hidden;
+  }
+  &__item{
+    .image{
+      height: 31rem;
+    }
+    .descr{
+      padding: 1.5rem 2rem;
+      border: 5px solid #EFAC00;
+      border-top: none;
+    }
+    .name{
+      margin-bottom: .5rem;
+    }
+  }
+
+      .swiper{
+    &__nav{
+     
+      margin-left: 0!important
+      ;
+    }
+   
+  }
+
+}

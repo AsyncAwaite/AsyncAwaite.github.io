@@ -113,6 +113,38 @@
   }
   
 }
+&-page{
+  
+  &__descr{
+    padding-right: 7rem;
+    p{
+      margin-bottom: 2rem;
+    }
+  }
+  &__person{
+    margin-top: 3rem;
+    padding: 7rem 0;
+    .title-big{
+      top: 0;
+
+    }
+    h4{
+      margin-bottom: 1.5rem;
+    }
+    .descr{
+      // margin-top: 2rem;
+      padding: 2.5rem 0 2.5rem 7rem;
+      p{
+        margin-bottom: 2.5rem;
+      }
+    }
+    .image{
+      height: 33.5rem;
+    }
+
+  }
+
+}
 
 
 }
