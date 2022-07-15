@@ -1,17 +1,18 @@
-.report{
- &__wrapper{
-   overflow: hidden;
-
-
- }
-.title{
-  padding: 3rem 0;
+.reports{
+  &-wrapper{
+    overflow: hidden;
+  }
+.title-big{
+  top: size(-80, -30);
+}
+&__descr{
+  margin-bottom: 4rem;
+}
+.descr{
+  span{
+    display: block;
+  text-align: right;
+  }
 }
 
-.image{
-  height: size(345, 200)
-}
-}
-.swiper__nav{
- margin-top: 2rem;
 }

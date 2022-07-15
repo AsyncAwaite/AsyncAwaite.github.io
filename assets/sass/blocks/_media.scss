@@ -45,6 +45,12 @@
   .diveder{
     height: 15rem;
   }
+  .reports{
+    .title-big{
+      top: -8rem;
+      
+    }
+  }
 //
 
 }
@@ -186,6 +192,11 @@
       }
     }
   }
+}
+.reports{
+  .title_left::after {
+    left: -35%;
+}
 }
 }
 

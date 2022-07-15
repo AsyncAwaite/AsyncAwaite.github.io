@@ -18241,6 +18241,52 @@ const sliders = () => {
     });
   }
 
+  if (document.querySelector(".reports-wrapper")) {
+    const swiperTeam = new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](".swiper-reports", {
+      slidesPerView: 4,
+      spaceBetween: 12,
+      loop: true,
+      runCallbacksOnInit: true,
+      navigation: {
+        nextEl: ".swiper-reports__next",
+        prevEl: ".swiper-reports__prev"
+      },
+      on: {
+        slideChange: function () {
+          changeCount(this);
+        },
+        beforeInit: function () {
+          countSlides(this);
+        }
+      },
+      breakpoints: {
+        1200: {
+          slidesPerView: 5
+        },
+        992: {
+          slidesPerView: 4,
+          centeredSlides: false
+        },
+        768: {
+          slidesPerView: 3,
+          centeredSlides: false
+        },
+        576: {
+          slidesPerView: 2,
+          centeredSlides: false
+        },
+        375: {
+          slidesPerView: 1,
+          centeredSlides: false
+        },
+        320: {
+          slidesPerView: 1,
+          centeredSlides: false
+        }
+      }
+    });
+  }
+
   if (document.querySelector(".gratitude-wrapper")) {
     const swiperTeam = new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](".swiper-gratitude", {
       slidesPerView: 4,

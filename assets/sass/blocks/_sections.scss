@@ -27,6 +27,15 @@ padding-top: 0!important;
   margin-left: 0;
 }
 }
+&__reports{
+  .counter{
+    margin: 0 1rem;
+  }
+  .swiper__nav{
+    margin-left: 0;
+  }
+
+}
 &__footer{
   padding-bottom: 4rem;
   background: #415262;
