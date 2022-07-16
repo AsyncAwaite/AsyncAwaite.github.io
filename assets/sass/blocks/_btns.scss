@@ -42,6 +42,11 @@ background: $yellow;
    &.disabled{
      pointer-events: none;
    }
+   &_gray{
+     background-color: $fc;
+     width: 15rem;
+   }
+
 
 } 
 

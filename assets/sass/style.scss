@@ -214,6 +214,7 @@ footer {
   &-big{
     font-size: size(180, 64);
     line-height: size(180, 64);
+
     text-transform: uppercase;
 position: absolute;
 right: 0;top: size(-120, -42);
@@ -482,7 +483,8 @@ border-bottom:  1px solid #464646;
 @import "blocks/about";
 @import "blocks/team";
 @import "blocks/gratitude";
-// @import "blocks/form-section";
+@import "blocks/project";
+@import "blocks/needs";
 @import "blocks/report";
 @import 'blocks/partners-page';
 @import "blocks/footer";

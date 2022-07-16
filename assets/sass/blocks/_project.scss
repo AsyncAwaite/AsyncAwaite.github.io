@@ -1,44 +1,44 @@
 .project {
-&__descr{
-  padding: 4rem 0 4rem 4rem;
-  .text{
-    margin-bottom: 4rem;
+&__header{
+  margin-bottom: 9rem;
+}
+&__footer{
+  .about{
+    &__descr{
+      padding: 6rem 6rem 6rem 0;
+    }
+    &__image{
+      width: 100%;
+      height: 100%;
+
+      .image{
+        height: 100%;
+        width: 44rem;
+        // width: 100%;    
+          margin-left: auto;
+          &::after{
+            content: '';
+            position: absolute;
+            width: 50%;
+            height: 80%;
+            border: 5px solid #FFC700;
+            left: -9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: -1;
+          }
+      }
+
+    }
+  }
+  .descr{
+padding-left: 0;
+   p{
+     margin-bottom: 4rem;
+   }
   }
 }
-&__gallery{
-overflow: hidden;
-margin-bottom: 3rem;
- 
-}
-&__img{
-  position: relative;
-  width: 100%;
-  height: 100%;
-  img{
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-  }
-}
-.swiper{
-&__img{
-  position: relative;
-  img{
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-  }
-}
-
-&-project{
-  height: 21rem;
-
-
-}
-
+&__author{
+  text-align: right;
 }
 }

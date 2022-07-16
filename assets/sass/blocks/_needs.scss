@@ -1,0 +1,55 @@
+.needs{
+  &__header{
+    width: 55%;
+  }
+  &__wrapper{
+    padding: 4rem 0;
+    .row{
+      row-gap: 3rem;
+    }
+
+  }
+  &__item{
+    padding: 2.5rem;
+    background-color: #FFC700;
+    &-wrapper{
+    padding: 1.5rem 3rem 1.5rem 0;
+    position: relative;
+      &::after{
+        position: absolute;
+        content: '';
+        left: 2.5rem;
+        bottom: 0;
+        width: calc(100% - 3rem);
+        height: 100%;
+        border: 5px solid rgba(117, 181, 201, 1);
+        z-index: -1;
+      }
+    }
+    h4{
+      margin-bottom: 2rem;
+    }
+    .budget{
+      &__progress{
+        margin-bottom: 2.5rem;
+        height: 3px;
+        background: #fff;
+        width: 100%;
+        position: relative;
+        span{
+          position: absolute;
+          width: 50%;
+          height: 100%;
+          left: 0;
+          top: 0;background-color: $fc;
+        }
+      }
+      &__info{
+        margin-bottom: 2rem;
+      }
+      .item{
+        padding-right: 2rem;
+      }
+    }
+  }
+}
