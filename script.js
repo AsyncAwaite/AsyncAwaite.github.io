@@ -8961,6 +8961,1015 @@ _core_holder_js__WEBPACK_IMPORTED_MODULE_2__["default"].MaskedRegExp = MaskedReg
 
 /***/ }),
 
+/***/ "./node_modules/lazysizes/lazysizes.js":
+/*!*********************************************!*\
+  !*** ./node_modules/lazysizes/lazysizes.js ***!
+  \*********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+(function(window, factory) {
+	var lazySizes = factory(window, window.document, Date);
+	window.lazySizes = lazySizes;
+	if( true && module.exports){
+		module.exports = lazySizes;
+	}
+}(typeof window != 'undefined' ?
+      window : {}, 
+/**
+ * import("./types/global")
+ * @typedef { import("./types/lazysizes-config").LazySizesConfigPartial } LazySizesConfigPartial
+ */
+function l(window, document, Date) { // Pass in the window Date function also for SSR because the Date class can be lost
+	'use strict';
+	/*jshint eqnull:true */
+
+	var lazysizes,
+		/**
+		 * @type { LazySizesConfigPartial }
+		 */
+		lazySizesCfg;
+
+	(function(){
+		var prop;
+
+		var lazySizesDefaults = {
+			lazyClass: 'lazyload',
+			loadedClass: 'lazyloaded',
+			loadingClass: 'lazyloading',
+			preloadClass: 'lazypreload',
+			errorClass: 'lazyerror',
+			//strictClass: 'lazystrict',
+			autosizesClass: 'lazyautosizes',
+			fastLoadedClass: 'ls-is-cached',
+			iframeLoadMode: 0,
+			srcAttr: 'data-src',
+			srcsetAttr: 'data-srcset',
+			sizesAttr: 'data-sizes',
+			//preloadAfterLoad: false,
+			minSize: 40,
+			customMedia: {},
+			init: true,
+			expFactor: 1.5,
+			hFac: 0.8,
+			loadMode: 2,
+			loadHidden: true,
+			ricTimeout: 0,
+			throttleDelay: 125,
+		};
+
+		lazySizesCfg = window.lazySizesConfig || window.lazysizesConfig || {};
+
+		for(prop in lazySizesDefaults){
+			if(!(prop in lazySizesCfg)){
+				lazySizesCfg[prop] = lazySizesDefaults[prop];
+			}
+		}
+	})();
+
+	if (!document || !document.getElementsByClassName) {
+		return {
+			init: function () {},
+			/**
+			 * @type { LazySizesConfigPartial }
+			 */
+			cfg: lazySizesCfg,
+			/**
+			 * @type { true }
+			 */
+			noSupport: true,
+		};
+	}
+
+	var docElem = document.documentElement;
+
+	var supportPicture = window.HTMLPictureElement;
+
+	var _addEventListener = 'addEventListener';
+
+	var _getAttribute = 'getAttribute';
+
+	/**
+	 * Update to bind to window because 'this' becomes null during SSR
+	 * builds.
+	 */
+	var addEventListener = window[_addEventListener].bind(window);
+
+	var setTimeout = window.setTimeout;
+
+	var requestAnimationFrame = window.requestAnimationFrame || setTimeout;
+
+	var requestIdleCallback = window.requestIdleCallback;
+
+	var regPicture = /^picture$/i;
+
+	var loadEvents = ['load', 'error', 'lazyincluded', '_lazyloaded'];
+
+	var regClassCache = {};
+
+	var forEach = Array.prototype.forEach;
+
+	/**
+	 * @param ele {Element}
+	 * @param cls {string}
+	 */
+	var hasClass = function(ele, cls) {
+		if(!regClassCache[cls]){
+			regClassCache[cls] = new RegExp('(\\s|^)'+cls+'(\\s|$)');
+		}
+		return regClassCache[cls].test(ele[_getAttribute]('class') || '') && regClassCache[cls];
+	};
+
+	/**
+	 * @param ele {Element}
+	 * @param cls {string}
+	 */
+	var addClass = function(ele, cls) {
+		if (!hasClass(ele, cls)){
+			ele.setAttribute('class', (ele[_getAttribute]('class') || '').trim() + ' ' + cls);
+		}
+	};
+
+	/**
+	 * @param ele {Element}
+	 * @param cls {string}
+	 */
+	var removeClass = function(ele, cls) {
+		var reg;
+		if ((reg = hasClass(ele,cls))) {
+			ele.setAttribute('class', (ele[_getAttribute]('class') || '').replace(reg, ' '));
+		}
+	};
+
+	var addRemoveLoadEvents = function(dom, fn, add){
+		var action = add ? _addEventListener : 'removeEventListener';
+		if(add){
+			addRemoveLoadEvents(dom, fn);
+		}
+		loadEvents.forEach(function(evt){
+			dom[action](evt, fn);
+		});
+	};
+
+	/**
+	 * @param elem { Element }
+	 * @param name { string }
+	 * @param detail { any }
+	 * @param noBubbles { boolean }
+	 * @param noCancelable { boolean }
+	 * @returns { CustomEvent }
+	 */
+	var triggerEvent = function(elem, name, detail, noBubbles, noCancelable){
+		var event = document.createEvent('Event');
+
+		if(!detail){
+			detail = {};
+		}
+
+		detail.instance = lazysizes;
+
+		event.initEvent(name, !noBubbles, !noCancelable);
+
+		event.detail = detail;
+
+		elem.dispatchEvent(event);
+		return event;
+	};
+
+	var updatePolyfill = function (el, full){
+		var polyfill;
+		if( !supportPicture && ( polyfill = (window.picturefill || lazySizesCfg.pf) ) ){
+			if(full && full.src && !el[_getAttribute]('srcset')){
+				el.setAttribute('srcset', full.src);
+			}
+			polyfill({reevaluate: true, elements: [el]});
+		} else if(full && full.src){
+			el.src = full.src;
+		}
+	};
+
+	var getCSS = function (elem, style){
+		return (getComputedStyle(elem, null) || {})[style];
+	};
+
+	/**
+	 *
+	 * @param elem { Element }
+	 * @param parent { Element }
+	 * @param [width] {number}
+	 * @returns {number}
+	 */
+	var getWidth = function(elem, parent, width){
+		width = width || elem.offsetWidth;
+
+		while(width < lazySizesCfg.minSize && parent && !elem._lazysizesWidth){
+			width =  parent.offsetWidth;
+			parent = parent.parentNode;
+		}
+
+		return width;
+	};
+
+	var rAF = (function(){
+		var running, waiting;
+		var firstFns = [];
+		var secondFns = [];
+		var fns = firstFns;
+
+		var run = function(){
+			var runFns = fns;
+
+			fns = firstFns.length ? secondFns : firstFns;
+
+			running = true;
+			waiting = false;
+
+			while(runFns.length){
+				runFns.shift()();
+			}
+
+			running = false;
+		};
+
+		var rafBatch = function(fn, queue){
+			if(running && !queue){
+				fn.apply(this, arguments);
+			} else {
+				fns.push(fn);
+
+				if(!waiting){
+					waiting = true;
+					(document.hidden ? setTimeout : requestAnimationFrame)(run);
+				}
+			}
+		};
+
+		rafBatch._lsFlush = run;
+
+		return rafBatch;
+	})();
+
+	var rAFIt = function(fn, simple){
+		return simple ?
+			function() {
+				rAF(fn);
+			} :
+			function(){
+				var that = this;
+				var args = arguments;
+				rAF(function(){
+					fn.apply(that, args);
+				});
+			}
+		;
+	};
+
+	var throttle = function(fn){
+		var running;
+		var lastTime = 0;
+		var gDelay = lazySizesCfg.throttleDelay;
+		var rICTimeout = lazySizesCfg.ricTimeout;
+		var run = function(){
+			running = false;
+			lastTime = Date.now();
+			fn();
+		};
+		var idleCallback = requestIdleCallback && rICTimeout > 49 ?
+			function(){
+				requestIdleCallback(run, {timeout: rICTimeout});
+
+				if(rICTimeout !== lazySizesCfg.ricTimeout){
+					rICTimeout = lazySizesCfg.ricTimeout;
+				}
+			} :
+			rAFIt(function(){
+				setTimeout(run);
+			}, true)
+		;
+
+		return function(isPriority){
+			var delay;
+
+			if((isPriority = isPriority === true)){
+				rICTimeout = 33;
+			}
+
+			if(running){
+				return;
+			}
+
+			running =  true;
+
+			delay = gDelay - (Date.now() - lastTime);
+
+			if(delay < 0){
+				delay = 0;
+			}
+
+			if(isPriority || delay < 9){
+				idleCallback();
+			} else {
+				setTimeout(idleCallback, delay);
+			}
+		};
+	};
+
+	//based on http://modernjavascript.blogspot.de/2013/08/building-better-debounce.html
+	var debounce = function(func) {
+		var timeout, timestamp;
+		var wait = 99;
+		var run = function(){
+			timeout = null;
+			func();
+		};
+		var later = function() {
+			var last = Date.now() - timestamp;
+
+			if (last < wait) {
+				setTimeout(later, wait - last);
+			} else {
+				(requestIdleCallback || run)(run);
+			}
+		};
+
+		return function() {
+			timestamp = Date.now();
+
+			if (!timeout) {
+				timeout = setTimeout(later, wait);
+			}
+		};
+	};
+
+	var loader = (function(){
+		var preloadElems, isCompleted, resetPreloadingTimer, loadMode, started;
+
+		var eLvW, elvH, eLtop, eLleft, eLright, eLbottom, isBodyHidden;
+
+		var regImg = /^img$/i;
+		var regIframe = /^iframe$/i;
+
+		var supportScroll = ('onscroll' in window) && !(/(gle|ing)bot/.test(navigator.userAgent));
+
+		var shrinkExpand = 0;
+		var currentExpand = 0;
+
+		var isLoading = 0;
+		var lowRuns = -1;
+
+		var resetPreloading = function(e){
+			isLoading--;
+			if(!e || isLoading < 0 || !e.target){
+				isLoading = 0;
+			}
+		};
+
+		var isVisible = function (elem) {
+			if (isBodyHidden == null) {
+				isBodyHidden = getCSS(document.body, 'visibility') == 'hidden';
+			}
+
+			return isBodyHidden || !(getCSS(elem.parentNode, 'visibility') == 'hidden' && getCSS(elem, 'visibility') == 'hidden');
+		};
+
+		var isNestedVisible = function(elem, elemExpand){
+			var outerRect;
+			var parent = elem;
+			var visible = isVisible(elem);
+
+			eLtop -= elemExpand;
+			eLbottom += elemExpand;
+			eLleft -= elemExpand;
+			eLright += elemExpand;
+
+			while(visible && (parent = parent.offsetParent) && parent != document.body && parent != docElem){
+				visible = ((getCSS(parent, 'opacity') || 1) > 0);
+
+				if(visible && getCSS(parent, 'overflow') != 'visible'){
+					outerRect = parent.getBoundingClientRect();
+					visible = eLright > outerRect.left &&
+						eLleft < outerRect.right &&
+						eLbottom > outerRect.top - 1 &&
+						eLtop < outerRect.bottom + 1
+					;
+				}
+			}
+
+			return visible;
+		};
+
+		var checkElements = function() {
+			var eLlen, i, rect, autoLoadElem, loadedSomething, elemExpand, elemNegativeExpand, elemExpandVal,
+				beforeExpandVal, defaultExpand, preloadExpand, hFac;
+			var lazyloadElems = lazysizes.elements;
+
+			if((loadMode = lazySizesCfg.loadMode) && isLoading < 8 && (eLlen = lazyloadElems.length)){
+
+				i = 0;
+
+				lowRuns++;
+
+				for(; i < eLlen; i++){
+
+					if(!lazyloadElems[i] || lazyloadElems[i]._lazyRace){continue;}
+
+					if(!supportScroll || (lazysizes.prematureUnveil && lazysizes.prematureUnveil(lazyloadElems[i]))){unveilElement(lazyloadElems[i]);continue;}
+
+					if(!(elemExpandVal = lazyloadElems[i][_getAttribute]('data-expand')) || !(elemExpand = elemExpandVal * 1)){
+						elemExpand = currentExpand;
+					}
+
+					if (!defaultExpand) {
+						defaultExpand = (!lazySizesCfg.expand || lazySizesCfg.expand < 1) ?
+							docElem.clientHeight > 500 && docElem.clientWidth > 500 ? 500 : 370 :
+							lazySizesCfg.expand;
+
+						lazysizes._defEx = defaultExpand;
+
+						preloadExpand = defaultExpand * lazySizesCfg.expFactor;
+						hFac = lazySizesCfg.hFac;
+						isBodyHidden = null;
+
+						if(currentExpand < preloadExpand && isLoading < 1 && lowRuns > 2 && loadMode > 2 && !document.hidden){
+							currentExpand = preloadExpand;
+							lowRuns = 0;
+						} else if(loadMode > 1 && lowRuns > 1 && isLoading < 6){
+							currentExpand = defaultExpand;
+						} else {
+							currentExpand = shrinkExpand;
+						}
+					}
+
+					if(beforeExpandVal !== elemExpand){
+						eLvW = innerWidth + (elemExpand * hFac);
+						elvH = innerHeight + elemExpand;
+						elemNegativeExpand = elemExpand * -1;
+						beforeExpandVal = elemExpand;
+					}
+
+					rect = lazyloadElems[i].getBoundingClientRect();
+
+					if ((eLbottom = rect.bottom) >= elemNegativeExpand &&
+						(eLtop = rect.top) <= elvH &&
+						(eLright = rect.right) >= elemNegativeExpand * hFac &&
+						(eLleft = rect.left) <= eLvW &&
+						(eLbottom || eLright || eLleft || eLtop) &&
+						(lazySizesCfg.loadHidden || isVisible(lazyloadElems[i])) &&
+						((isCompleted && isLoading < 3 && !elemExpandVal && (loadMode < 3 || lowRuns < 4)) || isNestedVisible(lazyloadElems[i], elemExpand))){
+						unveilElement(lazyloadElems[i]);
+						loadedSomething = true;
+						if(isLoading > 9){break;}
+					} else if(!loadedSomething && isCompleted && !autoLoadElem &&
+						isLoading < 4 && lowRuns < 4 && loadMode > 2 &&
+						(preloadElems[0] || lazySizesCfg.preloadAfterLoad) &&
+						(preloadElems[0] || (!elemExpandVal && ((eLbottom || eLright || eLleft || eLtop) || lazyloadElems[i][_getAttribute](lazySizesCfg.sizesAttr) != 'auto')))){
+						autoLoadElem = preloadElems[0] || lazyloadElems[i];
+					}
+				}
+
+				if(autoLoadElem && !loadedSomething){
+					unveilElement(autoLoadElem);
+				}
+			}
+		};
+
+		var throttledCheckElements = throttle(checkElements);
+
+		var switchLoadingClass = function(e){
+			var elem = e.target;
+
+			if (elem._lazyCache) {
+				delete elem._lazyCache;
+				return;
+			}
+
+			resetPreloading(e);
+			addClass(elem, lazySizesCfg.loadedClass);
+			removeClass(elem, lazySizesCfg.loadingClass);
+			addRemoveLoadEvents(elem, rafSwitchLoadingClass);
+			triggerEvent(elem, 'lazyloaded');
+		};
+		var rafedSwitchLoadingClass = rAFIt(switchLoadingClass);
+		var rafSwitchLoadingClass = function(e){
+			rafedSwitchLoadingClass({target: e.target});
+		};
+
+		var changeIframeSrc = function(elem, src){
+			var loadMode = elem.getAttribute('data-load-mode') || lazySizesCfg.iframeLoadMode;
+
+			// loadMode can be also a string!
+			if (loadMode == 0) {
+				elem.contentWindow.location.replace(src);
+			} else if (loadMode == 1) {
+				elem.src = src;
+			}
+		};
+
+		var handleSources = function(source){
+			var customMedia;
+
+			var sourceSrcset = source[_getAttribute](lazySizesCfg.srcsetAttr);
+
+			if( (customMedia = lazySizesCfg.customMedia[source[_getAttribute]('data-media') || source[_getAttribute]('media')]) ){
+				source.setAttribute('media', customMedia);
+			}
+
+			if(sourceSrcset){
+				source.setAttribute('srcset', sourceSrcset);
+			}
+		};
+
+		var lazyUnveil = rAFIt(function (elem, detail, isAuto, sizes, isImg){
+			var src, srcset, parent, isPicture, event, firesLoad;
+
+			if(!(event = triggerEvent(elem, 'lazybeforeunveil', detail)).defaultPrevented){
+
+				if(sizes){
+					if(isAuto){
+						addClass(elem, lazySizesCfg.autosizesClass);
+					} else {
+						elem.setAttribute('sizes', sizes);
+					}
+				}
+
+				srcset = elem[_getAttribute](lazySizesCfg.srcsetAttr);
+				src = elem[_getAttribute](lazySizesCfg.srcAttr);
+
+				if(isImg) {
+					parent = elem.parentNode;
+					isPicture = parent && regPicture.test(parent.nodeName || '');
+				}
+
+				firesLoad = detail.firesLoad || (('src' in elem) && (srcset || src || isPicture));
+
+				event = {target: elem};
+
+				addClass(elem, lazySizesCfg.loadingClass);
+
+				if(firesLoad){
+					clearTimeout(resetPreloadingTimer);
+					resetPreloadingTimer = setTimeout(resetPreloading, 2500);
+					addRemoveLoadEvents(elem, rafSwitchLoadingClass, true);
+				}
+
+				if(isPicture){
+					forEach.call(parent.getElementsByTagName('source'), handleSources);
+				}
+
+				if(srcset){
+					elem.setAttribute('srcset', srcset);
+				} else if(src && !isPicture){
+					if(regIframe.test(elem.nodeName)){
+						changeIframeSrc(elem, src);
+					} else {
+						elem.src = src;
+					}
+				}
+
+				if(isImg && (srcset || isPicture)){
+					updatePolyfill(elem, {src: src});
+				}
+			}
+
+			if(elem._lazyRace){
+				delete elem._lazyRace;
+			}
+			removeClass(elem, lazySizesCfg.lazyClass);
+
+			rAF(function(){
+				// Part of this can be removed as soon as this fix is older: https://bugs.chromium.org/p/chromium/issues/detail?id=7731 (2015)
+				var isLoaded = elem.complete && elem.naturalWidth > 1;
+
+				if( !firesLoad || isLoaded){
+					if (isLoaded) {
+						addClass(elem, lazySizesCfg.fastLoadedClass);
+					}
+					switchLoadingClass(event);
+					elem._lazyCache = true;
+					setTimeout(function(){
+						if ('_lazyCache' in elem) {
+							delete elem._lazyCache;
+						}
+					}, 9);
+				}
+				if (elem.loading == 'lazy') {
+					isLoading--;
+				}
+			}, true);
+		});
+
+		/**
+		 *
+		 * @param elem { Element }
+		 */
+		var unveilElement = function (elem){
+			if (elem._lazyRace) {return;}
+			var detail;
+
+			var isImg = regImg.test(elem.nodeName);
+
+			//allow using sizes="auto", but don't use. it's invalid. Use data-sizes="auto" or a valid value for sizes instead (i.e.: sizes="80vw")
+			var sizes = isImg && (elem[_getAttribute](lazySizesCfg.sizesAttr) || elem[_getAttribute]('sizes'));
+			var isAuto = sizes == 'auto';
+
+			if( (isAuto || !isCompleted) && isImg && (elem[_getAttribute]('src') || elem.srcset) && !elem.complete && !hasClass(elem, lazySizesCfg.errorClass) && hasClass(elem, lazySizesCfg.lazyClass)){return;}
+
+			detail = triggerEvent(elem, 'lazyunveilread').detail;
+
+			if(isAuto){
+				 autoSizer.updateElem(elem, true, elem.offsetWidth);
+			}
+
+			elem._lazyRace = true;
+			isLoading++;
+
+			lazyUnveil(elem, detail, isAuto, sizes, isImg);
+		};
+
+		var afterScroll = debounce(function(){
+			lazySizesCfg.loadMode = 3;
+			throttledCheckElements();
+		});
+
+		var altLoadmodeScrollListner = function(){
+			if(lazySizesCfg.loadMode == 3){
+				lazySizesCfg.loadMode = 2;
+			}
+			afterScroll();
+		};
+
+		var onload = function(){
+			if(isCompleted){return;}
+			if(Date.now() - started < 999){
+				setTimeout(onload, 999);
+				return;
+			}
+
+
+			isCompleted = true;
+
+			lazySizesCfg.loadMode = 3;
+
+			throttledCheckElements();
+
+			addEventListener('scroll', altLoadmodeScrollListner, true);
+		};
+
+		return {
+			_: function(){
+				started = Date.now();
+
+				lazysizes.elements = document.getElementsByClassName(lazySizesCfg.lazyClass);
+				preloadElems = document.getElementsByClassName(lazySizesCfg.lazyClass + ' ' + lazySizesCfg.preloadClass);
+
+				addEventListener('scroll', throttledCheckElements, true);
+
+				addEventListener('resize', throttledCheckElements, true);
+
+				addEventListener('pageshow', function (e) {
+					if (e.persisted) {
+						var loadingElements = document.querySelectorAll('.' + lazySizesCfg.loadingClass);
+
+						if (loadingElements.length && loadingElements.forEach) {
+							requestAnimationFrame(function () {
+								loadingElements.forEach( function (img) {
+									if (img.complete) {
+										unveilElement(img);
+									}
+								});
+							});
+						}
+					}
+				});
+
+				if(window.MutationObserver){
+					new MutationObserver( throttledCheckElements ).observe( docElem, {childList: true, subtree: true, attributes: true} );
+				} else {
+					docElem[_addEventListener]('DOMNodeInserted', throttledCheckElements, true);
+					docElem[_addEventListener]('DOMAttrModified', throttledCheckElements, true);
+					setInterval(throttledCheckElements, 999);
+				}
+
+				addEventListener('hashchange', throttledCheckElements, true);
+
+				//, 'fullscreenchange'
+				['focus', 'mouseover', 'click', 'load', 'transitionend', 'animationend'].forEach(function(name){
+					document[_addEventListener](name, throttledCheckElements, true);
+				});
+
+				if((/d$|^c/.test(document.readyState))){
+					onload();
+				} else {
+					addEventListener('load', onload);
+					document[_addEventListener]('DOMContentLoaded', throttledCheckElements);
+					setTimeout(onload, 20000);
+				}
+
+				if(lazysizes.elements.length){
+					checkElements();
+					rAF._lsFlush();
+				} else {
+					throttledCheckElements();
+				}
+			},
+			checkElems: throttledCheckElements,
+			unveil: unveilElement,
+			_aLSL: altLoadmodeScrollListner,
+		};
+	})();
+
+
+	var autoSizer = (function(){
+		var autosizesElems;
+
+		var sizeElement = rAFIt(function(elem, parent, event, width){
+			var sources, i, len;
+			elem._lazysizesWidth = width;
+			width += 'px';
+
+			elem.setAttribute('sizes', width);
+
+			if(regPicture.test(parent.nodeName || '')){
+				sources = parent.getElementsByTagName('source');
+				for(i = 0, len = sources.length; i < len; i++){
+					sources[i].setAttribute('sizes', width);
+				}
+			}
+
+			if(!event.detail.dataAttr){
+				updatePolyfill(elem, event.detail);
+			}
+		});
+		/**
+		 *
+		 * @param elem {Element}
+		 * @param dataAttr
+		 * @param [width] { number }
+		 */
+		var getSizeElement = function (elem, dataAttr, width){
+			var event;
+			var parent = elem.parentNode;
+
+			if(parent){
+				width = getWidth(elem, parent, width);
+				event = triggerEvent(elem, 'lazybeforesizes', {width: width, dataAttr: !!dataAttr});
+
+				if(!event.defaultPrevented){
+					width = event.detail.width;
+
+					if(width && width !== elem._lazysizesWidth){
+						sizeElement(elem, parent, event, width);
+					}
+				}
+			}
+		};
+
+		var updateElementsSizes = function(){
+			var i;
+			var len = autosizesElems.length;
+			if(len){
+				i = 0;
+
+				for(; i < len; i++){
+					getSizeElement(autosizesElems[i]);
+				}
+			}
+		};
+
+		var debouncedUpdateElementsSizes = debounce(updateElementsSizes);
+
+		return {
+			_: function(){
+				autosizesElems = document.getElementsByClassName(lazySizesCfg.autosizesClass);
+				addEventListener('resize', debouncedUpdateElementsSizes);
+			},
+			checkElems: debouncedUpdateElementsSizes,
+			updateElem: getSizeElement
+		};
+	})();
+
+	var init = function(){
+		if(!init.i && document.getElementsByClassName){
+			init.i = true;
+			autoSizer._();
+			loader._();
+		}
+	};
+
+	setTimeout(function(){
+		if(lazySizesCfg.init){
+			init();
+		}
+	});
+
+	lazysizes = {
+		/**
+		 * @type { LazySizesConfigPartial }
+		 */
+		cfg: lazySizesCfg,
+		autoSizer: autoSizer,
+		loader: loader,
+		init: init,
+		uP: updatePolyfill,
+		aC: addClass,
+		rC: removeClass,
+		hC: hasClass,
+		fire: triggerEvent,
+		gW: getWidth,
+		rAF: rAF,
+	};
+
+	return lazysizes;
+}
+));
+
+
+/***/ }),
+
+/***/ "./node_modules/lazysizes/plugins/parent-fit/ls.parent-fit.js":
+/*!********************************************************************!*\
+  !*** ./node_modules/lazysizes/plugins/parent-fit/ls.parent-fit.js ***!
+  \********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(window, factory) {
+	if(!window) {return;}
+	var globalInstall = function(){
+		factory(window.lazySizes);
+		window.removeEventListener('lazyunveilread', globalInstall, true);
+	};
+
+	factory = factory.bind(null, window, window.document);
+
+	if( true && module.exports){
+		factory(__webpack_require__(/*! lazysizes */ "./node_modules/lazysizes/lazysizes.js"));
+	} else if (true) {
+		!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(/*! lazysizes */ "./node_modules/lazysizes/lazysizes.js")], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	} else {}
+}(typeof window != 'undefined' ?
+	window : 0, function(window, document, lazySizes) {
+	'use strict';
+
+	if(!window.addEventListener){return;}
+
+	var regDescriptors = /\s+(\d+)(w|h)\s+(\d+)(w|h)/;
+	var regCssFit = /parent-fit["']*\s*:\s*["']*(contain|cover|width)/;
+	var regCssObject = /parent-container["']*\s*:\s*["']*(.+?)(?=(\s|$|,|'|"|;))/;
+	var regPicture = /^picture$/i;
+	var cfg = lazySizes.cfg;
+
+	var getCSS = function (elem){
+		return (getComputedStyle(elem, null) || {});
+	};
+
+	var parentFit = {
+
+		getParent: function(element, parentSel){
+			var parent = element;
+			var parentNode = element.parentNode;
+
+			if((!parentSel || parentSel == 'prev') && parentNode && regPicture.test(parentNode.nodeName || '')){
+				parentNode = parentNode.parentNode;
+			}
+
+			if(parentSel != 'self'){
+				if(parentSel == 'prev'){
+					parent = element.previousElementSibling;
+				} else if(parentSel && (parentNode.closest || window.jQuery)){
+					parent = (parentNode.closest ?
+							parentNode.closest(parentSel) :
+							jQuery(parentNode).closest(parentSel)[0]) ||
+						parentNode
+					;
+				} else {
+					parent = parentNode;
+				}
+			}
+
+			return parent;
+		},
+
+		getFit: function(element){
+			var tmpMatch, parentObj;
+			var css = getCSS(element);
+			var content = css.content || css.fontFamily;
+			var obj = {
+				fit: element._lazysizesParentFit || element.getAttribute('data-parent-fit')
+			};
+
+			if(!obj.fit && content && (tmpMatch = content.match(regCssFit))){
+				obj.fit = tmpMatch[1];
+			}
+
+			if(obj.fit){
+				parentObj = element._lazysizesParentContainer || element.getAttribute('data-parent-container');
+
+				if(!parentObj && content && (tmpMatch = content.match(regCssObject))){
+					parentObj = tmpMatch[1];
+				}
+
+				obj.parent = parentFit.getParent(element, parentObj);
+
+
+			} else {
+				obj.fit = css.objectFit;
+			}
+
+			return obj;
+		},
+
+		getImageRatio: function(element){
+			var i, srcset, media, ratio, match, width, height;
+			var parent = element.parentNode;
+			var elements = parent && regPicture.test(parent.nodeName || '') ?
+					parent.querySelectorAll('source, img') :
+					[element]
+				;
+
+			for(i = 0; i < elements.length; i++){
+				element = elements[i];
+				srcset = element.getAttribute(cfg.srcsetAttr) || element.getAttribute('srcset') || element.getAttribute('data-pfsrcset') || element.getAttribute('data-risrcset') || '';
+				media = element._lsMedia || element.getAttribute('media');
+				media = cfg.customMedia[element.getAttribute('data-media') || media] || media;
+
+				if(srcset && (!media || (window.matchMedia && matchMedia(media) || {}).matches )){
+					ratio = parseFloat(element.getAttribute('data-aspectratio'));
+
+					if (!ratio) {
+						match = srcset.match(regDescriptors);
+
+						if (match) {
+							if(match[2] == 'w'){
+								width = match[1];
+								height = match[3];
+							} else {
+								width = match[3];
+								height = match[1];
+							}
+						} else {
+							width = element.getAttribute('width');
+							height = element.getAttribute('height');
+						}
+
+						ratio = width / height;
+					}
+
+					break;
+				}
+			}
+
+			return ratio;
+		},
+
+		calculateSize: function(element, width){
+			var displayRatio, height, imageRatio, retWidth;
+			var fitObj = this.getFit(element);
+			var fit = fitObj.fit;
+			var fitElem = fitObj.parent;
+
+			if(fit != 'width' && ((fit != 'contain' && fit != 'cover') || !(imageRatio = this.getImageRatio(element)))){
+				return width;
+			}
+
+			if(fitElem){
+				width = fitElem.clientWidth;
+			} else {
+				fitElem = element;
+			}
+
+			retWidth = width;
+
+			if(fit == 'width'){
+				retWidth = width;
+			} else {
+				height = fitElem.clientHeight;
+
+				if((displayRatio =  width / height) && ((fit == 'cover' && displayRatio < imageRatio) || (fit == 'contain' && displayRatio > imageRatio))){
+					retWidth = width * (imageRatio / displayRatio);
+				}
+			}
+
+			return retWidth;
+		}
+	};
+
+	lazySizes.parentFit = parentFit;
+
+	document.addEventListener('lazybeforesizes', function(e){
+		if(e.defaultPrevented || e.detail.instance != lazySizes){return;}
+
+		var element = e.target;
+		e.detail.width = parentFit.calculateSize(element, e.detail.width);
+	});
+}));
+
+
+/***/ }),
+
 /***/ "./node_modules/ssr-window/ssr-window.esm.js":
 /*!***************************************************!*\
   !*** ./node_modules/ssr-window/ssr-window.esm.js ***!
@@ -19396,26 +20405,33 @@ module.exports = g;
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _modules_adaptiveElements__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./modules/adaptiveElements */ "./src/js/modules/adaptiveElements.js");
-/* harmony import */ var _modules_scrollToAnchor__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./modules/scrollToAnchor */ "./src/js/modules/scrollToAnchor.js");
-/* harmony import */ var _modules_gallerySlider__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./modules/gallerySlider */ "./src/js/modules/gallerySlider.js");
-/* harmony import */ var _modules_elements__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./modules/elements */ "./src/js/modules/elements.js");
-/* harmony import */ var _modules_checkbox__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./modules/checkbox */ "./src/js/modules/checkbox.js");
-/* harmony import */ var _modules_tabs__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./modules/tabs */ "./src/js/modules/tabs.js");
-/* harmony import */ var _modules_Forms__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./modules/Forms */ "./src/js/modules/Forms.js");
-/* harmony import */ var _modules_adsPage__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./modules/adsPage */ "./src/js/modules/adsPage.js");
-/* harmony import */ var _modules_Dropdown__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./modules/Dropdown */ "./src/js/modules/Dropdown.js");
-/* harmony import */ var _modules_pressAboutPage__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./modules/pressAboutPage */ "./src/js/modules/pressAboutPage.js");
-/* harmony import */ var _modules_newsPage__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./modules/newsPage */ "./src/js/modules/newsPage.js");
-/* harmony import */ var _modules_singleNews__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./modules/singleNews */ "./src/js/modules/singleNews.js");
-/* harmony import */ var _modules_singleObjectPage__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./modules/singleObjectPage */ "./src/js/modules/singleObjectPage.js");
-/* harmony import */ var _modules_objectsPage__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./modules/objectsPage */ "./src/js/modules/objectsPage.js");
-/* harmony import */ var _modules_modalsEvents__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./modules/modalsEvents */ "./src/js/modules/modalsEvents.js");
-/* harmony import */ var _modules_popups__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./modules/popups */ "./src/js/modules/popups.js");
-/* harmony import */ var _modules_renderCelebrity__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./modules/renderCelebrity */ "./src/js/modules/renderCelebrity.js");
-/* harmony import */ var _modules_renderTeam__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./modules/renderTeam */ "./src/js/modules/renderTeam.js");
-/* harmony import */ var _modules_renderPartners__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./modules/renderPartners */ "./src/js/modules/renderPartners.js");
-/* harmony import */ var _modules_thankPage__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./modules/thankPage */ "./src/js/modules/thankPage.js");
+/* harmony import */ var lazysizes__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lazysizes */ "./node_modules/lazysizes/lazysizes.js");
+/* harmony import */ var lazysizes__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lazysizes__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var lazysizes_plugins_parent_fit_ls_parent_fit__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! lazysizes/plugins/parent-fit/ls.parent-fit */ "./node_modules/lazysizes/plugins/parent-fit/ls.parent-fit.js");
+/* harmony import */ var lazysizes_plugins_parent_fit_ls_parent_fit__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(lazysizes_plugins_parent_fit_ls_parent_fit__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _modules_adaptiveElements__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./modules/adaptiveElements */ "./src/js/modules/adaptiveElements.js");
+/* harmony import */ var _modules_scrollToAnchor__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./modules/scrollToAnchor */ "./src/js/modules/scrollToAnchor.js");
+/* harmony import */ var _modules_gallerySlider__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./modules/gallerySlider */ "./src/js/modules/gallerySlider.js");
+/* harmony import */ var _modules_elements__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./modules/elements */ "./src/js/modules/elements.js");
+/* harmony import */ var _modules_checkbox__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./modules/checkbox */ "./src/js/modules/checkbox.js");
+/* harmony import */ var _modules_tabs__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./modules/tabs */ "./src/js/modules/tabs.js");
+/* harmony import */ var _modules_Forms__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./modules/Forms */ "./src/js/modules/Forms.js");
+/* harmony import */ var _modules_adsPage__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./modules/adsPage */ "./src/js/modules/adsPage.js");
+/* harmony import */ var _modules_Dropdown__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./modules/Dropdown */ "./src/js/modules/Dropdown.js");
+/* harmony import */ var _modules_pressAboutPage__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./modules/pressAboutPage */ "./src/js/modules/pressAboutPage.js");
+/* harmony import */ var _modules_newsPage__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./modules/newsPage */ "./src/js/modules/newsPage.js");
+/* harmony import */ var _modules_singleNews__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./modules/singleNews */ "./src/js/modules/singleNews.js");
+/* harmony import */ var _modules_singleObjectPage__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./modules/singleObjectPage */ "./src/js/modules/singleObjectPage.js");
+/* harmony import */ var _modules_objectsPage__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./modules/objectsPage */ "./src/js/modules/objectsPage.js");
+/* harmony import */ var _modules_modalsEvents__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./modules/modalsEvents */ "./src/js/modules/modalsEvents.js");
+/* harmony import */ var _modules_popups__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./modules/popups */ "./src/js/modules/popups.js");
+/* harmony import */ var _modules_renderCelebrity__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./modules/renderCelebrity */ "./src/js/modules/renderCelebrity.js");
+/* harmony import */ var _modules_renderTeam__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./modules/renderTeam */ "./src/js/modules/renderTeam.js");
+/* harmony import */ var _modules_renderPartners__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./modules/renderPartners */ "./src/js/modules/renderPartners.js");
+/* harmony import */ var _modules_thankPage__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./modules/thankPage */ "./src/js/modules/thankPage.js");
+
+
+ // import a plugin
 
 
 
@@ -19442,28 +20458,25 @@ const blogers = [...celebrity[0].celebrity];
 const crew = [...team[0].crew];
 const partners = [...partnersSupport[0].partners];
 
-setTimeout(() => {
+const preloader = document.querySelector(".preloader");
+
+function preloaderAction() {
   document.body.classList.remove("active");
   document.body.classList.add("loaded");
   document.body.classList.remove("loaded_hiding");
-  const preloader = document.querySelector(".preloader");
   preloader.remove();
+}
+
+setTimeout(() => {
+  preloaderAction();
 }, 1000);
 window.addEventListener("DOMContentLoaded", () => {
   try {
-    if (blogers && crew && partners) {
-      Object(_modules_renderCelebrity__WEBPACK_IMPORTED_MODULE_16__["default"])(blogers);
-      Object(_modules_renderTeam__WEBPACK_IMPORTED_MODULE_17__["default"])(crew);
-      Object(_modules_renderPartners__WEBPACK_IMPORTED_MODULE_18__["default"])(partners);
-    }
-
-    Object(_modules_scrollToAnchor__WEBPACK_IMPORTED_MODULE_1__["default"])();
-    Object(_modules_gallerySlider__WEBPACK_IMPORTED_MODULE_2__["default"])();
-    Object(_modules_checkbox__WEBPACK_IMPORTED_MODULE_4__["default"])();
-    Object(_modules_thankPage__WEBPACK_IMPORTED_MODULE_19__["default"])();
+    Object(_modules_scrollToAnchor__WEBPACK_IMPORTED_MODULE_3__["default"])();
+    Object(_modules_checkbox__WEBPACK_IMPORTED_MODULE_6__["default"])();
 
     if (document.querySelector(".main__page")) {
-      Object(_modules_tabs__WEBPACK_IMPORTED_MODULE_5__["default"])();
+      Object(_modules_tabs__WEBPACK_IMPORTED_MODULE_7__["default"])();
 
       if (!isEn) {
         document.querySelector("[data-askHelp]").addEventListener("click", () => {
@@ -19479,14 +20492,14 @@ window.addEventListener("DOMContentLoaded", () => {
             attention.classList.toggle("open");
           });
         });
-        new _modules_Dropdown__WEBPACK_IMPORTED_MODULE_8__["default"](".region-materials").init("region");
-        new _modules_Dropdown__WEBPACK_IMPORTED_MODULE_8__["default"](".region-help").init("region");
-        new _modules_Forms__WEBPACK_IMPORTED_MODULE_6__["default"](".form-help").init();
-        new _modules_Forms__WEBPACK_IMPORTED_MODULE_6__["default"](".form-materials").init();
+        new _modules_Dropdown__WEBPACK_IMPORTED_MODULE_10__["default"](".region-materials").init("region");
+        new _modules_Dropdown__WEBPACK_IMPORTED_MODULE_10__["default"](".region-help").init("region");
+        new _modules_Forms__WEBPACK_IMPORTED_MODULE_8__["default"](".form-help").init();
+        new _modules_Forms__WEBPACK_IMPORTED_MODULE_8__["default"](".form-materials").init();
       }
 
-      if (_modules_elements__WEBPACK_IMPORTED_MODULE_3__["gtagBtns"]) {
-        _modules_elements__WEBPACK_IMPORTED_MODULE_3__["gtagBtns"].forEach(btn => {
+      if (_modules_elements__WEBPACK_IMPORTED_MODULE_5__["gtagBtns"]) {
+        _modules_elements__WEBPACK_IMPORTED_MODULE_5__["gtagBtns"].forEach(btn => {
           btn.addEventListener("click", function () {
             gtag("event", "click", {
               event_category: "donate",
@@ -19497,14 +20510,23 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    Object(_modules_pressAboutPage__WEBPACK_IMPORTED_MODULE_9__["default"])();
-    Object(_modules_newsPage__WEBPACK_IMPORTED_MODULE_10__["default"])();
-    Object(_modules_singleNews__WEBPACK_IMPORTED_MODULE_11__["default"])();
-    Object(_modules_singleObjectPage__WEBPACK_IMPORTED_MODULE_12__["default"])();
-    Object(_modules_adsPage__WEBPACK_IMPORTED_MODULE_7__["default"])();
-    Object(_modules_objectsPage__WEBPACK_IMPORTED_MODULE_13__["default"])();
     headerFixed();
-    Object(_modules_adaptiveElements__WEBPACK_IMPORTED_MODULE_0__["default"])();
+    Object(_modules_adaptiveElements__WEBPACK_IMPORTED_MODULE_2__["default"])();
+    Object(_modules_objectsPage__WEBPACK_IMPORTED_MODULE_15__["default"])();
+    Object(_modules_pressAboutPage__WEBPACK_IMPORTED_MODULE_11__["default"])();
+    Object(_modules_newsPage__WEBPACK_IMPORTED_MODULE_12__["default"])();
+    Object(_modules_singleNews__WEBPACK_IMPORTED_MODULE_13__["default"])();
+    Object(_modules_singleObjectPage__WEBPACK_IMPORTED_MODULE_14__["default"])();
+    Object(_modules_adsPage__WEBPACK_IMPORTED_MODULE_9__["default"])();
+    Object(_modules_thankPage__WEBPACK_IMPORTED_MODULE_21__["default"])();
+
+    if (blogers && crew && partners) {
+      Object(_modules_renderCelebrity__WEBPACK_IMPORTED_MODULE_18__["default"])(blogers);
+      Object(_modules_renderTeam__WEBPACK_IMPORTED_MODULE_19__["default"])(crew);
+      Object(_modules_renderPartners__WEBPACK_IMPORTED_MODULE_20__["default"])(partners);
+    }
+
+    Object(_modules_gallerySlider__WEBPACK_IMPORTED_MODULE_4__["default"])();
     window.addEventListener("scroll", () => {
       headerFixed();
     });
@@ -19512,15 +20534,15 @@ window.addEventListener("DOMContentLoaded", () => {
     function headerFixed() {
       if (matchMedia("(max-width: 600px)").matches) {
         if (window.pageYOffset > 40) {
-          _modules_elements__WEBPACK_IMPORTED_MODULE_3__["header"].classList.add("header_fixed");
+          _modules_elements__WEBPACK_IMPORTED_MODULE_5__["header"].classList.add("header_fixed");
         } else {
-          _modules_elements__WEBPACK_IMPORTED_MODULE_3__["header"].classList.remove("header_fixed");
+          _modules_elements__WEBPACK_IMPORTED_MODULE_5__["header"].classList.remove("header_fixed");
         }
       } else {
         if (window.pageYOffset > 80) {
-          _modules_elements__WEBPACK_IMPORTED_MODULE_3__["header"].classList.add("header_fixed");
+          _modules_elements__WEBPACK_IMPORTED_MODULE_5__["header"].classList.add("header_fixed");
         } else {
-          _modules_elements__WEBPACK_IMPORTED_MODULE_3__["header"].classList.remove("header_fixed");
+          _modules_elements__WEBPACK_IMPORTED_MODULE_5__["header"].classList.remove("header_fixed");
         }
       }
     }
@@ -19581,7 +20603,7 @@ window.addEventListener("DOMContentLoaded", () => {
         const modal = document.querySelector(".modal");
 
         if (item.dataset.modals === "form") {
-          new _modules_popups__WEBPACK_IMPORTED_MODULE_15__["default"](".modal-form").openModal();
+          new _modules_popups__WEBPACK_IMPORTED_MODULE_17__["default"](".modal-form").openModal();
           return;
         }
 
@@ -19613,20 +20635,20 @@ window.addEventListener("DOMContentLoaded", () => {
   
       </div>
       `;
-        new _modules_popups__WEBPACK_IMPORTED_MODULE_15__["default"](".modal-number").openModal();
+        new _modules_popups__WEBPACK_IMPORTED_MODULE_17__["default"](".modal-number").openModal();
       });
     });
   }
 
   window.addEventListener("orientationchange", function () {
-    if (screen.height < _modules_elements__WEBPACK_IMPORTED_MODULE_3__["modalBody"].offsetHeight) {
-      _modules_elements__WEBPACK_IMPORTED_MODULE_3__["modalWrapper"].style.height = "100%";
-      _modules_elements__WEBPACK_IMPORTED_MODULE_3__["modalBody"].style.height = "100%";
-      _modules_elements__WEBPACK_IMPORTED_MODULE_3__["modalBody"].style.overflow = "scroll";
+    if (screen.height < _modules_elements__WEBPACK_IMPORTED_MODULE_5__["modalBody"].offsetHeight) {
+      _modules_elements__WEBPACK_IMPORTED_MODULE_5__["modalWrapper"].style.height = "100%";
+      _modules_elements__WEBPACK_IMPORTED_MODULE_5__["modalBody"].style.height = "100%";
+      _modules_elements__WEBPACK_IMPORTED_MODULE_5__["modalBody"].style.overflow = "scroll";
     } else {
-      _modules_elements__WEBPACK_IMPORTED_MODULE_3__["modalWrapper"].style.height = "auto";
-      _modules_elements__WEBPACK_IMPORTED_MODULE_3__["modalBody"].style.height = "auto";
-      _modules_elements__WEBPACK_IMPORTED_MODULE_3__["modalBody"].style.overflow = "auto";
+      _modules_elements__WEBPACK_IMPORTED_MODULE_5__["modalWrapper"].style.height = "auto";
+      _modules_elements__WEBPACK_IMPORTED_MODULE_5__["modalBody"].style.height = "auto";
+      _modules_elements__WEBPACK_IMPORTED_MODULE_5__["modalBody"].style.overflow = "auto";
     }
   }, false);
 });
@@ -21103,6 +22125,110 @@ function removeCheck(arr) {
 
 /***/ }),
 
+/***/ "./src/js/modules/createDonate.js":
+/*!****************************************!*\
+  !*** ./src/js/modules/createDonate.js ***!
+  \****************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return createDonate; });
+function createDonate(btn) {
+  const payData = {
+    merchantAccount: "www_dobrobat_in_ua3",
+    merchantDomainName: "www.dobrobat.in.ua",
+    orderReference: `OBJ-${btn.dataset.id}-${Date.parse(new Date())}`,
+    orderDate: Date.parse(new Date()),
+    amount: 0,
+    merchantSignature: "",
+    currency: btn.dataset.currency,
+    productName: !isEn ? [`Благодійна пожертва на об'єкт - ${btn.dataset.id}`] : [`Donate for object - ${btn.dataset.id}`],
+    productCount: [1],
+    productPrice: [0],
+    language: btn.dataset.lang,
+    returnUrl: btn.dataset.label
+  };
+  let {
+    merchantAccount,
+    merchantDomainName,
+    orderReference,
+    merchantSignature,
+    orderDate,
+    amount,
+    currency,
+    productName = productName[0],
+    productCount = productCount[0],
+    productPrice = productPrice[0],
+    language,
+    returnUrl
+  } = payData;
+  let string = `${merchantAccount};${merchantDomainName};${orderReference};${orderDate};${amount};${currency};${productName};${productCount};${productPrice}`;
+  const data = new FormData();
+  data.append("string", string);
+
+  const postData = async (url, data) => {
+    let res = await fetch(url, {
+      method: "POST",
+      mode: "no-cors",
+      body: data
+    });
+
+    try {
+      return await res.text();
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const form = document.querySelector("#donate-form");
+
+  try {
+    postData(`${path}/assets/services/signature.php`, data).then(res => {
+      merchantSignature = res;
+      form.querySelectorAll("input").forEach(input => {
+        console.log(input.name);
+
+        switch (input.name) {
+          case "merchantSignature":
+            input.value = merchantSignature;
+            break;
+
+          case "orderDate":
+            input.value = orderDate;
+            break;
+
+          case "productName[]":
+            input.value = productName;
+            break;
+
+          case "currency":
+            input.value = currency;
+            break;
+
+          case "language":
+            input.value = language;
+            break;
+
+          case "orderReference":
+            input.value = orderReference;
+            break;
+
+          case 'returnUrl':
+            input.value += returnUrl;
+            break;
+        }
+      });
+      form.querySelector("button").click();
+    });
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+/***/ }),
+
 /***/ "./src/js/modules/elements.js":
 /*!************************************!*\
   !*** ./src/js/modules/elements.js ***!
@@ -21222,36 +22348,50 @@ __webpack_require__.r(__webpack_exports__);
 swiper__WEBPACK_IMPORTED_MODULE_0__["default"].use([swiper__WEBPACK_IMPORTED_MODULE_0__["Navigation"], swiper__WEBPACK_IMPORTED_MODULE_0__["Autoplay"], swiper__WEBPACK_IMPORTED_MODULE_0__["Thumbs"]]);
 
 const gallerySlider = () => {
-  // const swiper = new Swiper(".gallery", {
-  //   slidesPerView: 2,
-  //   spaceBetween: 20,
-  //   loop: true,
-  //   centeredSlides: false,
-  //   navigation: {
-  //     nextEl: ".next_slide",
-  //     prevEl: ".prev_slide",
-  //   },
-  //   breakpoints: {
-  //     1200: {
-  //       slidesPerView: 3,
-  //     },
-  //     768: {
-  //       slidesPerView: 2,
-  //       centeredSlides: false,
-  //     },
-  //     600: {
-  //       slidesPerView: 1,
-  //       centeredSlides: false,
-  //     },
-  //     320: {
-  //       slidesPerView: 1,
-  //       centeredSlides: false,
-  //     },
-  //   },
-  //   autoplay: {
-  //     delay: 3000,
-  //   },
-  // });
+  const swipeRenewed = new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](".swiper-renewed", {
+    slidesPerView: 4,
+    spaceBetween: 20,
+    runCallbacksOnInit: true,
+    navigation: {
+      nextEl: ".swiper-renewed__next",
+      prevEl: ".swiper-renewed__prev"
+    },
+    on: {
+      slideChange: function () {
+        var currentSlide = this.realIndex + 1;
+        document.querySelector(".counter__current").innerHTML = `${currentSlide}`;
+      },
+      beforeInit: function () {
+        let numOfSlides = this.wrapperEl.querySelectorAll(".swiper-slide").length;
+        document.querySelector(".counter__total").innerHTML = `${numOfSlides}`;
+      }
+    },
+    breakpoints: {
+      1200: {
+        slidesPerView: 4
+      },
+      992: {
+        slidesPerView: 3,
+        centeredSlides: false
+      },
+      768: {
+        slidesPerView: 2,
+        centeredSlides: false
+      },
+      660: {
+        slidesPerView: 2,
+        centeredSlides: false
+      },
+      600: {
+        slidesPerView: 1,
+        centeredSlides: false
+      },
+      320: {
+        slidesPerView: 1,
+        centeredSlides: false
+      }
+    }
+  });
   const swiperAbout = new swiper__WEBPACK_IMPORTED_MODULE_0__["default"](".swiper-about", {
     slidesPerView: 1.25,
     spaceBetween: 20,
@@ -21446,6 +22586,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return modalsEvents; });
 /* harmony import */ var _elements__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./elements */ "./src/js/modules/elements.js");
 /* harmony import */ var _popups__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./popups */ "./src/js/modules/popups.js");
+/* harmony import */ var _createDonate__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./createDonate */ "./src/js/modules/createDonate.js");
+
 
 
 const content = {
@@ -21499,6 +22641,7 @@ function modalsEvents(target) {
           event_category: "donate_objects",
           event_label: `${this.dataset.label}`
         });
+        Object(_createDonate__WEBPACK_IMPORTED_MODULE_2__["default"])(this);
       });
     });
   }
@@ -21530,27 +22673,46 @@ function renderImgModal(target) {
 
 function renderDonateModal(target) {
   _elements__WEBPACK_IMPORTED_MODULE_0__["modal"].classList.add("modal-donate");
-
-  if (!isEn) {
-    _elements__WEBPACK_IMPORTED_MODULE_0__["modalBody"].innerHTML = `
+  _elements__WEBPACK_IMPORTED_MODULE_0__["modalBody"].innerHTML = `
   <div class="donate-modal">
   <h2 class='fz-24 f-500 t-upper'>
-  Зроби свій благодійний внесок та приєднуйся до команди, що творить добро.
+  ${!isEn ? "Зроби свій благодійний внесок та приєднуйся до команди, що творить добро." : "Make your charitable contribution and join the team making good."} 
 </h2>
 <div class="content f-600 fz-24 t-upper">
 
 <div>
-ПІДТРИМАТИ:
+${!isEn ? "ПІДТРИМАТИ:" : "Support:"}
+
 </div>
-<a href="https://secure.wayforpay.com/button/bb815d38e4772" target="blank" class="btn btn_ac" data-label='uah'>
+<button  data-id='${target.dataset.donate}' class="btn btn_ac ${!isEn ? ":" : "d-none"}" data-lang="UA"  data-label='uah' data-currency="UAH">
 <span> UAH</span>
-</a>
-<a href="https://secure.wayforpay.com/button/bc6b8fc72269f" target="blank"   class="btn btn_ac" data-label='usd'>
+</button>
+<button   data-id='${target.dataset.donate}' class="btn btn_ac"  data-lang="${!isEn ? "UA" : "EN"}" data-label='usd' data-currency="USD">
   <span>USD</span>
-  </a>
-  <a href="https://secure.wayforpay.com/button/b6186de459c6b"  target="blank" class="btn btn_ac" data-label='eur'>
+  </button>
+  <button  data-id='${target.dataset.donate}' class="btn btn_ac" data-lang="${!isEn ? "UA" : "EN"}"  data-label='eur' data-currency="EUR">
     <span>EUR</span>
-    </a>
+    </button>
+    <form method="post" action="https://secure.wayforpay.com/pay" id="donate-form" class='d-none'>
+    <input name="merchantAccount" value="www_dobrobat_in_ua3">
+    <input name="merchantDomainName" value="www.dobrobat.in.ua">
+    <input name="merchantSignature" value="">
+    <input name="orderReference" value="">
+    <input name="orderDate" value="">
+    <input name="amount" value="0">
+    <input name="currency" value="">
+    <input name="returnUrl" value="${!isEn ? 'https://www.dobrobat.in.ua/thank-you-donate/' : 'https://www.dobrobat.in.ua/en/thank-you/'}?id=">
+    
+    
+    <input name="productName[]" value="">
+
+    <input name="productPrice[]" value="0">
+ 
+    <input name="productCount[]" value="1">
+    <input name="language" value="">
+    <input name="paymentSystems" value="card;googlePay;applePay;privat24">
+    <button type="submit"></button>
+   </form>
 </div>
 
 
@@ -21560,29 +22722,6 @@ function renderDonateModal(target) {
 
 </div>
 `;
-  } else {
-    _elements__WEBPACK_IMPORTED_MODULE_0__["modalBody"].innerHTML = `
-  <div class="donate-modal">
-  <h2 class='fz-24 f-500 t-upper'>
-  Make your charitable contribution and join the team making good.
-</h2>
-<div class="content f-600 fz-24 t-upper">
-
-<div class='t-upper'>
-Support :
-</div>
-
-<a href="https://secure.wayforpay.com/button/b0c6e9bc9bc5f" target="blank"   class="btn btn_ac" data-label='usd'>
-  <span>USD</span>
-  </a>
-  <a href="https://secure.wayforpay.com/button/b1d6160253af3"  target="blank" class="btn btn_ac" data-label='eur'>
-    <span>EUR</span>
-    </a>
-</div>
-
-
-`;
-  }
 }
 
 function renderError() {
@@ -21751,12 +22890,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return objectsPage; });
 /* harmony import */ var _postsRenderHelpFunc__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./postsRenderHelpFunc */ "./src/js/modules/postsRenderHelpFunc.js");
 /* harmony import */ var _elements__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./elements */ "./src/js/modules/elements.js");
-/* harmony import */ var _posts__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./posts */ "./src/js/modules/posts.js");
-/* harmony import */ var _changePhotoSlider__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./changePhotoSlider */ "./src/js/modules/changePhotoSlider.js");
-/* harmony import */ var _pagination__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./pagination */ "./src/js/modules/pagination.js");
+/* harmony import */ var _pagination__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./pagination */ "./src/js/modules/pagination.js");
 
-
-
+ // import { objects } from "./posts";
+// 
+// import ChangePhotoSlider from "./changePhotoSlider";
 
 
 function objectsPage() {
@@ -21767,7 +22905,7 @@ function objectsPage() {
       itemsOnPage: 9
     };
     const parent = document.querySelector("[data-objects]");
-    const obj = [..._posts__WEBPACK_IMPORTED_MODULE_2__["objects"]];
+    const obj = [...objects];
     parent.insertAdjacentElement("beforebegin", _elements__WEBPACK_IMPORTED_MODULE_1__["loadItems"]);
 
     const renderObj = function (arr, startPos, endPost) {
@@ -21783,7 +22921,7 @@ function objectsPage() {
         parent.appendChild(renderObject(post));
       });
       document.querySelectorAll("[data-objectsPhotos]").forEach(item => {
-        new _changePhotoSlider__WEBPACK_IMPORTED_MODULE_3__["default"](item).init();
+        // new ChangePhotoSlider(item).init();
         Object(_postsRenderHelpFunc__WEBPACK_IMPORTED_MODULE_0__["attachBtnModal"])("[data-donate]");
         Object(_postsRenderHelpFunc__WEBPACK_IMPORTED_MODULE_0__["renderProgress"])();
       });
@@ -21796,7 +22934,7 @@ function objectsPage() {
       }, 2500);
     };
 
-    Object(_pagination__WEBPACK_IMPORTED_MODULE_4__["default"])(options, obj, renderObj);
+    Object(_pagination__WEBPACK_IMPORTED_MODULE_2__["default"])(options, obj, renderObj);
   }
 }
 
@@ -21836,36 +22974,10 @@ function renderObject(post) {
 <div class="objects-item__photos ads-item-photos" data-objectsPhotos>
 <div class="objects-item-photos__main pos-r ">
 ${renderStatusIcon(status)}
-  <div class="image" data-mainPhoto ><img src="#" alt="">
-  </div>
-  <div class="objects-item-photos__nav d-flex pos-a">
-    <button class="prev">
-      <svg class="icon" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
-        <path d="M1.62109 2L4.87867 5.58333L1.62109 9.16667" stroke="#101113" stroke-width="3"
-          stroke-linecap="round" stroke-linejoin="round" class="arrow-ads" />
-
-      </svg>
-    </button>
-    <div class="number fz-14 f-600" data-number>
-      1
-    </div>
-    <button class="next">
-      <svg class="icon" viewBox="0 0 7 11" xmlns="http://www.w3.org/2000/svg">
-        <path d="M1.62109 2L4.87867 5.58333L1.62109 9.16667" stroke="#101113" stroke-width="3"
-          stroke-linecap="round" stroke-linejoin="round" class="arrow-ads" />
-
-      </svg>
-    </button>
-
-
+  <div class="image" data-mainPhoto >${photo ? renderImages(photo) : Object(_postsRenderHelpFunc__WEBPACK_IMPORTED_MODULE_0__["renderNoImg"])()}
   </div>
 </div>
-<div class="objects-item-photos__pagination d-flex" data-pagination>
-${photo ? renderImages(photo) : Object(_postsRenderHelpFunc__WEBPACK_IMPORTED_MODULE_0__["renderNoImg"])()}
 
-
-
-</div>
 
 
 
@@ -21936,9 +23048,9 @@ ${renderBtns(status, postId, doc)}
 function renderImages(arr) {
   let wrapper = "";
   arr.forEach((item, i) => {
-    if (i <= 2) {
+    if (i <= 0) {
       if (item) {
-        wrapper += `<div class="image"><img loading="lazy" src="${item.img}" alt='Фото'/>"alt=""></div>`;
+        wrapper += `<div class="image"><img class="lazyload" data-src="${item.img}" alt='Фото'/>"alt=""></div>`;
       }
     }
   });
@@ -21999,7 +23111,7 @@ function renderBtns(status, postId, doc) {
     <button class="btn btn_sm  btn_ac" data-donate='${postId}'>
     ${!isEn ? "Допомогти" : "Donate"}
     </button>
-    <a href="${doc}" class="btn  btn_sm btn_outline btn_outline-ac"><span class="doc">       <svg class="icon">
+    <a href="${doc}" target='blank' class="btn  btn_sm btn_outline btn_outline-ac"><span class="doc">       <svg class="icon">
     <use xlink:href="#doc"></use>
     </svg></span><span>   ${!isEn ? "ДОКУМЕНТація" : "DOCUMENTATION"}</span></a>
     </div>`;
@@ -22047,13 +23159,13 @@ function renderBudget(status, start, goal) {
 function statusName(status) {
   switch (status) {
     case "1":
-      return !isEn ? "ГОТУЄМОСЯ ДО ВІДНОВЛЕННЯ" : "translate";
+      return !isEn ? "ГОТУЄМОСЯ ДО ВІДНОВЛЕННЯ" : "Preparing for rennovation";
 
     case "2":
-      return !isEn ? "ВІДНОВЛЮЄМО" : "translate";
+      return !isEn ? "ВІДНОВЛЮЄМО" : "Renewing";
 
     case "3":
-      return !isEn ? "ВІДНОВИЛИ" : "translate";
+      return !isEn ? "ВІДНОВИЛИ" : "Renewed";
   }
 }
 
@@ -22335,7 +23447,7 @@ const objects = [{
   }, {
     "img": "https://www.dobrobat.in.ua/wp-content/uploads/2022/07/photo_2022-07-27_19-08-14-2.jpg"
   }],
-  "status": "1"
+  "status": "3"
 }, {
   "postId": 1778,
   "title": "Пошкоджено будинок",
@@ -22449,7 +23561,7 @@ const objects = [{
   }, {
     "img": "https://www.dobrobat.in.ua/wp-content/uploads/2022/07/photo_2022-06-16_00-15-41-2.jpg"
   }],
-  "status": "1"
+  "status": "3"
 }, {
   "postId": 1232,
   "title": "Пошкоджено будинок  в м. Ірпінь",
@@ -22535,7 +23647,7 @@ const objects = [{
   }, {
     "img": "https://www.dobrobat.in.ua/wp-content/uploads/2022/07/photo_2022-05-25_21-56-31.jpg"
   }],
-  "status": "1"
+  "status": "3"
 }];
 const posts = [{
   "postId": 557,
@@ -23667,7 +24779,7 @@ function render(arr) {
       div.innerHTML = `
                         <div class="celebrity__item bdr-12 card">
                           <div class="image">
-                            <img src="${photo}" loading="lazy" alt="${!isEn ? name : nameEn}">
+                            <img data-src="${photo}" class="lazyload" alt="${!isEn ? name : nameEn}">
                           </div>
                           <div class="name fz-18 f-800">
                           ${!isEn ? name : nameEn}
@@ -23767,12 +24879,12 @@ function render(arr) {
         photo,
         svg
       } = item;
-      let photoLink = item['photo-link'];
+      let photoLink = item["photo-link"];
       renderImg(photo, svg, photoLink);
       const div = document.createElement("div");
       div.classList = "swiper-slide";
       div.innerHTML = `
-      <a href="${link}" class="partners-support__item ${link.includes('facebook') ? 'partners-support__item-fb' : ''}">
+      <a href="${link}" class="partners-support__item ${link.includes("facebook") ? "partners-support__item-fb" : ""}">
       ${renderImg(photo, svg, photoLink)}
       </a>`;
       fragment.appendChild(div);
@@ -23787,30 +24899,14 @@ function render(arr) {
 function renderImg(photo, svg, photoLink) {
   if (photo || photoLink) {
     let url = photo ? photo : photoLink;
-    return `<img src="${url}"  alt="Partner">`;
+    return `<img data-src="${url}"  alt="Partner" class='lazyload'>`;
   }
 
   if (svg) {
     return `<svg class="icon">
     <use xlink:href="#${svg}"></use>
     </svg>`;
-  } // if( photoLink) {
-  //   console.log(photoLink);
-  // }
-
-}
-
-{
-  /* <div class="swiper-slide">
-   <a class="partners-support__item">
-   <img src="https://www.dobrobat.in.ua/wp-content/themes/dobrobat-1/assets/img/partners/8room.png" alt="">
-   </a>
-  </div> */
-}
-{
-  /* <svg class="icon">
-  <use xlink:href="#okko"></use>
-  </svg> */
+  }
 }
 
 /***/ }),
@@ -23871,7 +24967,7 @@ function render(arr) {
 function renderImg(photo, name, nameEn) {
   if (photo) {
     return `
-    <div class="image pos-r"><img src="${photo}" loading="lazy" alt="${!isEn ? name : nameEn}"></div>`;
+    <div class="image pos-r"><img data-src="${photo}" class="lazyload" alt="${!isEn ? name : nameEn}"></div>`;
   } else {
     return "";
   }
@@ -23985,48 +25081,61 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return singleObject; });
 /* harmony import */ var _changePhotoSlider__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./changePhotoSlider */ "./src/js/modules/changePhotoSlider.js");
 /* harmony import */ var _postsRenderHelpFunc__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./postsRenderHelpFunc */ "./src/js/modules/postsRenderHelpFunc.js");
+/* harmony import */ var _posts__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./posts */ "./src/js/modules/posts.js");
+
 
 
 function singleObject() {
   const singleObj = document.querySelector(".single-obj__page");
 
   if (singleObj) {
-    new _changePhotoSlider__WEBPACK_IMPORTED_MODULE_0__["default"](document.querySelector('[data-objectsphotos]')).init();
+    new _changePhotoSlider__WEBPACK_IMPORTED_MODULE_0__["default"](document.querySelector("[data-objectsphotos]")).init();
     Object(_postsRenderHelpFunc__WEBPACK_IMPORTED_MODULE_1__["attachBtnModal"])("[data-donate]");
     Object(_postsRenderHelpFunc__WEBPACK_IMPORTED_MODULE_1__["renderProgress"])();
-
-    window.fbAsyncInit = function () {
-      FB.init({
-        appId: '326821949541828',
-        status: true,
-        cookie: true,
-        xfbml: true
-      });
-    };
-
-    (function () {
-      var e = document.createElement('script');
-      e.async = true;
-      console.log(e);
-      e.src = document.location.protocol + '//connect.facebook.net/en_US/all.js';
-      document.querySelector('#fb-root').appendChild(e);
-    })();
-
-    console.log(document.querySelector("#share_button"));
-    document.querySelector("#share_button").addEventListener("click", function (e) {
-      console.log(e, this);
-      e.preventDefault();
-      FB.ui({
-        method: "feed",
-        name: 'This is the content of the "name" field.',
-        link: "https://www.dobrobat.in.ua/news/volonterski-bataljony-dobrobatu-prodovzhuyut-nagalnu-vidbudovu-na-deokupovanyh-terytoriyah/",
-        picture: "https://www.dobrobat.in.ua/wp-admin/about.php",
-        caption: "Test123",
-        description: "tralalala",
-        message: "wtf mthf"
-      });
+    const obj = _posts__WEBPACK_IMPORTED_MODULE_2__["objects"].filter(item => item.status === '3');
+    console.log(document.querySelector('.swiper-renewed').firstElementChild);
+    obj.forEach(item => {
+      document.querySelector('.swiper-renewed').firstElementChild.appendChild(renderItem(item));
     });
   }
+}
+
+function renderItem(obj) {
+  let {
+    title,
+    city,
+    city_en,
+    goal,
+    photo
+  } = obj;
+  let img = photo[0].img;
+  const fragment = document.createDocumentFragment();
+  const div = document.createElement("div");
+  div.classList = "swiper-slide";
+  div.innerHTML = `            <div class="renewed-item  bg-white bdr-10">
+    <div class="renewed-item__img pos-r">
+      <div class="image"><img class="lazyload" data-src="${img}" alt=""></div>
+      <div class="status pos-a status_3">
+        <svg class="icon">
+          <use xlink:href="#status-3"></use>
+        </svg>
+      </div>
+    </div>
+    <div class="renewed-item__descr">
+      <h3>
+      ${title}
+      </h3>
+      <div class="city t-secondary fz-18">
+      ${city}
+      </div>
+      <div class="goal fz-24 t-ac f-600">
+        Зібрано  ${goal} грн
+      </div>
+    </div>
+  
+  </div>`;
+  fragment.appendChild(div);
+  return fragment;
 }
 
 /***/ }),
